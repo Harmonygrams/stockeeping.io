@@ -118,3 +118,15 @@ values('{token}','{supplier_id}','{brand_id}','{category_id}','{buy_price}','{se
     a = cursor.rowcount
     connection.commit()
     return HttpResponse(json.dumps({'status':'success','other':token}))
+
+
+
+
+def getProducts(request):
+    connection = connect()
+    get_all_products_q = f'''select * from product'''
+    cursor = connection.cursor()
+    cursor.execute(get_all_products_q)
+    a = cursor.fetchall()
+    print(a)
+    return HttpResponse(json.dumps({'status':'success','other':a}))

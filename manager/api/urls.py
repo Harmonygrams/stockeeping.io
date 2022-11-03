@@ -7,6 +7,7 @@ path('addSupplier/', product.addSupplier),
 path('addBrand/', product.addBrand),
 path('addCategory/', product.addCategory),
 path('addProduct/', product.addProduct),
+path('getProducts/', product.getProducts)
 
 
 ]
