@@ -47,6 +47,7 @@ create Table product(
 	description varchar,
 	purchase_info varchar,
 	quantity int,
+	low_stock int,
   ///add the remaining fields [description,purchase_info,quantity] , yeah , just done it
 	primary key (idx)
 
