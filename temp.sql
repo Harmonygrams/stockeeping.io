@@ -56,7 +56,23 @@ create Table product(
 insert into product(idx,namex,supplier_id,brand_id,category_id,buy_price,esitmated_sell_price,sell_price,created_at,updated_at)
 values('idx1','namexx','idx','idx','idx','buy_pricehuh','estimatedsellprice_1','sell_pricexx','created_at1','updated_at1')
 
+create table item_purchased(
+   idx varchar ,
+   stock_increment_id VARCHAR ,
+   quantity int ,
+ product_id varchar,
+   description varchar,
+	total_cost varchar,
+	primary key (idx)
+)
 
+CREATE TABLE stock_increment(
+   idx varchar ,
+   supplier_id VARCHAR ,
+   date_purchased VARCHAR ,
+   email varchar,
+	primary key (idx)
+);
 
 
 
