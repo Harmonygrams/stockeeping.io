@@ -75,4 +75,34 @@ CREATE TABLE stock_increment(
 );
 
 
+CREATE TABLE customer(
+   idx varchar ,
+   namex VARCHAR ,
+   phone VARCHAR ,
+   email VARCHAR ,
+   country VARCHAR ,
+   city VARCHAR ,
+   postcode VARCHAR ,
+   address VARCHAR ,
+	primary key (idx)
+);
+
+create table item_sold(
+   idx varchar ,
+   stock_decrement_id VARCHAR ,
+   quantity int ,
+ product_id varchar,
+   description varchar,
+	total_cost varchar,
+	primary key (idx)
+)
+CREATE TABLE stock_decrement(
+   idx varchar ,
+   customer_id VARCHAR ,
+   date_purchased VARCHAR ,
+   email varchar,
+   details varchar,
+	primary key (idx)
+);
+
 
