@@ -18,7 +18,8 @@ def tokenGen(length=5):
 def connect():
     try:
         connection = psycopg2.connect(user="postgres",
-                                    password="0000",
+                                    password="postgres",
+                                    host="127.0.0.1",
                                     port="5432",
                                     database="manager2")
     except:
