@@ -139,7 +139,8 @@ def getProducts(request):
     for x in a :
         returner.append({'id':x[0],'name':x[1],'supplier_id':x[2],'brand_id':x[3],'category_id':x[4],'buy_price':x[5],'sell_price_estimate':x[6],'sell_price':x[7],'created_at':x[8],'updated_at':x[9],'description':x[10],'purchase_info':x[11],'quantity':x[12]})
     return HttpResponse(json.dumps({'status':'success','products':returner}))
-
+    
+@csrf_exempt
 def getProductStock(request):
     connection = connect()
     jned = json.loads(request.body)
@@ -161,6 +162,7 @@ def getProductStock(request):
     cursor = connection.cursor()
     cursor.execute(get_all_products_q)
     return HttpResponse(json.dumps({'status':'success','stock':cursor.fetchone()[0]}))
+    # return HttpResponse('ffd')
 
 def getBrands(request):
     connection = connect()
