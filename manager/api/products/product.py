@@ -325,8 +325,8 @@ def getIncrements(request):
             {
                 "idx":x[14],
                 "increment_id":x[15],
-                "quantity" : x[16],
-                "total_cost" : x[18]
+                "quantity" : x[17],
+                "total_cost" : x[19]
             }
         )
     return HttpResponse(json.dumps({'status':'success','increments':returner}))
