@@ -115,10 +115,15 @@ def addProduct(request):
 
     add_product_q = f'''
     insert into product(idx,supplier_id,brand_id,category_id,buy_price,esitmated_sell_price,sell_price,created_at,updated_at,namex,description,purchase_info,quantity,low_stock,user_id)
-values('{token}','{supplier_id}','{brand_id}','{category_id}','{buy_price}','{sell_price_estimate}','{sell_price}','{created_at}','{updated_at}','{name}','{description}','{purchase_info}',{int(quantity)},{int(low_stock)},'{jned['user_id']}')
+values('{token}','{supplier_id}','{brand_id}','{category_id}','{buy_price}','{sell_price_estimate}','{sell_price}','{created_at}','{updated_at}','{name}','{description}','{purchase_info}',{'NONE'},{int(low_stock)},'{jned['user_id']}')
     '''
+    add_product_to_stock_q = f'''
+        insert into item_purchased (idx,stock_increment_id,product_id,quantity,description,total_cost,user_id)
+        values ('{tokenGen()}','NONE','token',{quantity},'{description}','NONE','NONE')
+        '''
     cursor = connection.cursor()
     cursor.execute(add_product_q)
+    cursor.execute(add_product_to_stock_q)
     a = cursor.rowcount
     connection.commit()
     return HttpResponse(json.dumps({'status':'success','other':token}))
