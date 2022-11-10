@@ -106,3 +106,12 @@ CREATE TABLE stock_decrement(
 );
 
 
+create Table auth_user(
+    idx varchar ,
+	namex varchar,
+	surname varchar,
+	email varchar, 
+	passwordx varchar,
+	phone varchar,
+	primary key (idx)
+)

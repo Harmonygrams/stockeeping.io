@@ -1,2 +1,64 @@
 ---------VARIABLES----------------------------------------------------------------
 CREATED USER ID : 28Bty
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------
+suplier : id - 1 
+suplier : id - 3 
+suplier : id - 4 
+
+
+Iin quickbooks, you don't have the option to delete, 
+most times all you need to do is to make the item inactive
+So let's make the items 
+
+
+
+
+
+
+
+
+        productType : '', //
+        productName : '', 
+        productDescription : '', 
+        productCategory : '', 
+        productSku : '', 
+        productOnHandQty : 0,
+        productRestockPoint: 0, 
+        productAddedDate : Date.toString(), 
+        productSalesPrice : 0,
+        productCostPrice : 0,
+        productSupplier : '',
