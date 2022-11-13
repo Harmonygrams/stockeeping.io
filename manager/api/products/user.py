@@ -29,6 +29,7 @@ def connect():
         
 @csrf_exempt
 def createUser(request):
+    print(request.body)
     jned = json.loads(request.body)
     email = jned['email']
     password = jned['password']
