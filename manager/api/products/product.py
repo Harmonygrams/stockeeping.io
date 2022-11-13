@@ -13,11 +13,12 @@ def tokenGen(length=5):
     lettersAndDigits = string.ascii_letters + string.digits
     token = ''.join((random.choice(lettersAndDigits) for i in range(length)))
     return token
-
+# insert into typex (namex,idx,user_id)
+# values('typename','token','user_id')
 def connect():
     try:
         connection = psycopg2.connect(user="postgres",
-                                    password="0000",
+                                    password="postgres",
                                     port="5432",
                                     database="manager2")
     except:
