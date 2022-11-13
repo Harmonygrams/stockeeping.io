@@ -17,8 +17,7 @@ def tokenGen(length=5):
 def connect():
     try:
         connection = psycopg2.connect(user="postgres",
-                                    password="postgres",
-                                    host="127.0.0.1",
+                                    password="0000",
                                     port="5432",
                                     database="manager2")
     except:
@@ -334,6 +333,7 @@ def loadStock(request):
     insert into stock_increment(idx,supplier_id,date_purchased,email,user_id)
     values('{stock_increment_idx}','{supplier_id}','{date_purchased}','{email}','{user_id}')
     '''
+    totalx = 0
     cursor = connection.cursor()
     cursor.execute(insert_empty_stock_q)
     added_products = []
@@ -344,18 +344,52 @@ def loadStock(request):
         added_products.append(item_purchased_idx)
         quantity = x['quantity']
         description = x['description']
-        total_cost = x['total_cost']
         product_id = x['product_id']
+        total_cost = x['total_cost']
+        total_cost = x['total_cost']
+        totalx += total_cost
+        total_cost = 12
         add_product_to_stock_q = f'''
         insert into item_purchased (idx,stock_increment_id,product_id,quantity,description,total_cost,user_id)
         values ('{item_purchased_idx}','{stock_increment_idx}','{product_id}',{quantity},'{description}','{total_cost}','{user_id}')
         '''
         cursor.execute(add_product_to_stock_q)
         update_stock_local(user_id,product_id,quantity)
-        
+    get_all_expenses_q = f'''
+    select expense from auth_user where auth_user.idx = '{user_id}'
+    '''    
+    
+    cursor.execute(get_all_expenses_q)
+    expense = cursor.fetchone()[0]
+    update_expense_q = f'''
+     update auth_user 
+    set expense = {expense+totalx}
+    where auth_user.idx = '{user_id}'
+    '''
+    
+    cursor.execute(update_expense_q)
+    rowcount = cursor.rowcount
+    print(rowcount)
     connection.commit()
-    return HttpResponse(json.dumps({'status':'success','added_products':added_products , 'stock_increment_idx':stock_increment_idx}))
-        
+    return HttpResponse(json.dumps({'status':'success','added_products':added_products , 'stock_increment_idx':stock_increment_idx, 'total_cost':totalx, 'expense':expense}))
+
+
+@csrf_exempt
+def getAccounts(request):
+    jned = json.loads(request.body)
+    user_id = jned['user_id']
+    get_accounts_user_q = f'''
+    select expense, income from auth_user where auth_user.idx = '{user_id}'
+    '''
+    connection = connect()
+    cursor = connection.cursor()
+    cursor.execute(get_accounts_user_q)
+    fetched = cursor.fetchall()
+    returner = []
+    for x in fetched:
+        returner.append(x)
+    return HttpResponse(json.dumps({'status':'success','accounts':returner}))
+
 @csrf_exempt
 def unloadStock(request):
     jned = json.loads(request.body)
@@ -375,6 +409,7 @@ def unloadStock(request):
     rowcount = cursor.rowcount
     print('we added stock main ',rowcount)
     # rowcount = connection.cursor().execute(unload_stock_q).rowcount
+    totalx = 0
     removed_products = []
     for x in jned['products']:
         item_sold_idx = tokenGen()
@@ -382,6 +417,7 @@ def unloadStock(request):
         product_id = x['product_id']
         description = x['description']
         total_price = x['total_price']
+        totalx += total_price
         add_product_to_stock_q = f'''
         insert into item_sold (idx,stock_decrement_id,quantity,product_id,description,total_cost,user_id)
         values('{item_sold_idx}','{token}',{quantity},'{product_id}','{description}','{total_price}','{user_id}')
@@ -392,6 +428,17 @@ def unloadStock(request):
         
         if rowcount == 1:
             removed_products.append(item_sold_idx)
+    get_all_income_q = f'''
+    select income from auth_user where auth_user.idx = '{user_id}'
+    '''    
+    cursor.execute(get_all_income_q)
+    income = cursor.fetchone()[0]
+    update_income_q = f'''
+    update auth_user 
+    set income = {income+totalx}
+    where auth_user.idx = '{user_id}'
+    '''
+    cursor.execute(update_income_q)
     connection.commit()
     return HttpResponse(json.dumps({'status':'success','items_removed':removed_products,'token':token}))
 

@@ -20,6 +20,8 @@ path('getIncrements/', product.getIncrements),
 path('getCustomers/', product.getCustomers),
 path('getProductStock/', product.getProductStock), # POST
 
+
+path('getAccounts/', product.getAccounts),
 path('createUser/', user.createUser),
 
 
