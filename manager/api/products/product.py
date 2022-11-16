@@ -13,74 +13,22 @@ def tokenGen(length=5):
     lettersAndDigits = string.ascii_letters + string.digits
     token = ''.join((random.choice(lettersAndDigits) for i in range(length)))
     return token
-# insert into typex (namex,idx,user_id)
-# values('typename','token','user_id')
+
+
+
 def connect():
     try:
         connection = psycopg2.connect(user="postgres",
                                     password="postgres",
+                                    host="127.0.0.1",
                                     port="5432",
                                     database="manager2")
     except:
         print('error in connection ')
     return connection
-
-def get_product_stock_local(user_id, idx):
-    connection = connect()
-    cursor = connection.cursor()
-
-    check_if_product_sold_q = f'''
-    select sum(item_sold.quantity) from item_sold join product on item_sold.product_id = product.idx
-    join auth_user on item_sold.user_id = auth_user.idx
-    where product.idx = '{idx}'
-    and auth_user.idx='{user_id}'
-    '''
-    check_if_product_exists_q = f'''
-    select sum(item_purchased.quantity) from item_purchased join product on item_purchased.product_id = product.idx 
-    join auth_user on item_purchased.user_id = auth_user.idx
-    where product.idx = '{idx}'
-    and auth_user.idx='{user_id}'
-    '''
-    cursor.execute(check_if_product_sold_q)
-    fetched = cursor.fetchall()
-    if not fetched[0][0] :
-        cursor.execute(check_if_product_exists_q)
-        fetched = cursor.fetchone()
-        return fetched[0]
-    get_all_products_q = f'''
-    select(
-    select sum(item_purchased.quantity) from item_purchased join product on item_purchased.product_id = product.idx 
-    join auth_user on item_purchased.user_id = auth_user.idx
-    where product.idx = '{idx}'
-    and auth_user.idx='{user_id}') - ( 
-
-    select sum(item_sold.quantity) from item_sold join product on item_sold.product_id = product.idx
-    join auth_user on item_sold.user_id = auth_user.idx
-    where product.idx = '{idx}'
-    and auth_user.idx='{user_id}'
-        ) 
-    '''
-    cursor.execute(get_all_products_q)
-    returner = cursor.fetchone()[0]
-    print('returning this ',returner)
-    return returner
-
-def update_stock_local(user_id,product_id,quantity):
-    quantity = get_product_stock_local(user_id,product_id) + quantity
-    connection = connect()
-    cursor = connection.cursor()
-    print(quantity)
-    update_product_q = f'''
-    update product 
-    set quantity = {quantity} 
-    where product.idx = '{product_id}'
-    and product.user_id in (select auth_user.idx from auth_user join product on auth_user.idx = product.user_id where auth_user.idx = '{user_id}' and product.idx = '{product_id}')
-    '''
-    cursor.execute(update_product_q)
-    connection.commit()
-    if cursor.rowcount > 0 :
-        return True         
-    
+        
+        
+        
 # @csrf_exempt
 @csrf_exempt
 def addSupplier(request):
@@ -164,31 +112,28 @@ def addProduct(request):
     description = jned['description']
     purchase_info  = jned['purchase_info']
     quantity = jned['quantity']
-    is_active = jned['is_active']
-    skuid = jned['sku_id']    
+    
     created_at = int(time.time())
     updated_at = int(time.time())
 
     add_product_q = f'''
-    insert into product(idx,supplier_id,brand_id,category_id,buy_price,esitmated_sell_price,sell_price,created_at,updated_at,namex,description,purchase_info,quantity,low_stock,user_id,is_active,sku)
-values('{token}','{supplier_id}','{brand_id}','{category_id}','{buy_price}','{sell_price_estimate}','{sell_price}','{created_at}','{updated_at}','{name}','{description}','{purchase_info}',{0},{int(low_stock)},'{jned['user_id']}',{is_active},'{skuid}')
+    insert into product(idx,supplier_id,brand_id,category_id,buy_price,esitmated_sell_price,sell_price,created_at,updated_at,namex,description,purchase_info,quantity,low_stock,user_id)
+values('{token}','{supplier_id}','{brand_id}','{category_id}','{buy_price}','{sell_price_estimate}','{sell_price}','{created_at}','{updated_at}','{name}','{description}','{purchase_info}',{'NONE'},{int(low_stock)},'{jned['user_id']}')
     '''
     add_product_to_stock_q = f'''
         insert into item_purchased (idx,stock_increment_id,product_id,quantity,description,total_cost,user_id)
-        values ('{tokenGen()}','NONE','{token}',{quantity},'{description}','NONE','{jned['user_id']}')
+        values ('{tokenGen()}','NONE','token',{quantity},'{description}','NONE','NONE')
         '''
     cursor = connection.cursor()
     cursor.execute(add_product_q)
     cursor.execute(add_product_to_stock_q)
     a = cursor.rowcount
     connection.commit()
-    waiter = update_stock_local(jned['user_id'],token,quantity)
-    if waiter:
-        return HttpResponse(json.dumps({'status':'success','other':token}))
+    return HttpResponse(json.dumps({'status':'success','other':token}))
 
 
 
-@csrf_exempt
+
 def getProducts(request):
     connection = connect()
     jned = json.loads(request.body)
@@ -200,35 +145,15 @@ def getProducts(request):
     print(a)
     returner = []
     for x in a :
-        returner.append({'id':x[0],'name':x[1],'supplier_id':x[2],'brand_id':x[3],'category_id':x[4],'buy_price':x[5],'sell_price_estimate':x[6],'sell_price':x[7],'created_at':x[8],'updated_at':x[9],'description':x[10],'purchase_info':x[11],'quantity':x[12],'low_stock':x[13],'user_id':x[14],'sku':x[15],'is_active':x[16]})
+        returner.append({'id':x[0],'name':x[1],'supplier_id':x[2],'brand_id':x[3],'category_id':x[4],'buy_price':x[5],'sell_price_estimate':x[6],'sell_price':x[7],'created_at':x[8],'updated_at':x[9],'description':x[10],'purchase_info':x[11],'quantity':x[12]})
     return HttpResponse(json.dumps({'status':'success','products':returner}))
-
+    
 @csrf_exempt
 def getProductStock(request):
     connection = connect()
-    cursor = connection.cursor()
-
     jned = json.loads(request.body)
     idx = jned['id']
     user_id = jned['user_id']
-    check_if_product_sold_q = f'''
-    select sum(item_sold.quantity) from item_sold join product on item_sold.product_id = product.idx
-    join auth_user on item_sold.user_id = auth_user.idx
-    where product.idx = '{idx}'
-    and auth_user.idx='{user_id}'
-    '''
-    check_if_product_exists_q = f'''
-    select sum(item_purchased.quantity) from item_purchased join product on item_purchased.product_id = product.idx 
-    join auth_user on item_purchased.user_id = auth_user.idx
-    where product.idx = '{idx}'
-    and auth_user.idx='{user_id}'
-    '''
-    cursor.execute(check_if_product_sold_q)
-    fetched = cursor.fetchall()
-    if not fetched[0][0] :
-        cursor.execute(check_if_product_exists_q)
-        fetched = cursor.fetchone()
-        return HttpResponse(json.dumps({'status':'success','stock':fetched[0]}))
     get_all_products_q = f'''
     select(
     select sum(item_purchased.quantity) from item_purchased join product on item_purchased.product_id = product.idx 
@@ -242,11 +167,11 @@ def getProductStock(request):
     and auth_user.idx='{user_id}'
         ) 
     '''
+    cursor = connection.cursor()
     cursor.execute(get_all_products_q)
     return HttpResponse(json.dumps({'status':'success','stock':cursor.fetchone()[0]}))
     # return HttpResponse('ffd')
-     
-@csrf_exempt
+
 def getBrands(request):
     connection = connect()
     jned = json.loads(request.body)
@@ -260,7 +185,7 @@ def getBrands(request):
         returner.append({'id':x[0],'name':x[1]})
     return HttpResponse(json.dumps({'status':'success','brands':returner}))
 
-@csrf_exempt
+
 def getSuppliers(request):
     connection = connect()
     jned = json.loads(request.body)
@@ -275,7 +200,6 @@ def getSuppliers(request):
     print(a)
     return HttpResponse(json.dumps({'status':'success','suppliers':returner}))
 
-@csrf_exempt
 def getCategories(request):
     connection = connect()
     jned = json.loads(request.body)
@@ -290,7 +214,7 @@ def getCategories(request):
     return HttpResponse(json.dumps({'status':'success','category':returner}))
 
 
-@csrf_exempt
+
 def getStockDetails(request):
     connection = connect()
     jned = json.loads(request.body)
@@ -355,24 +279,8 @@ def loadStock(request):
         values ('{item_purchased_idx}','{stock_increment_idx}','{product_id}',{quantity},'{description}','{total_cost}','{user_id}')
         '''
         cursor.execute(add_product_to_stock_q)
-        update_stock_local(user_id,product_id,quantity)
-    get_all_expenses_q = f'''
-    select expense from auth_user where auth_user.idx = '{user_id}'
-    '''    
-    
-    cursor.execute(get_all_expenses_q)
-    expense = cursor.fetchone()[0]
-    update_expense_q = f'''
-     update auth_user 
-    set expense = {expense+totalx}
-    where auth_user.idx = '{user_id}'
-    '''
-    
-    cursor.execute(update_expense_q)
-    rowcount = cursor.rowcount
-    print(rowcount)
     connection.commit()
-    return HttpResponse(json.dumps({'status':'success','added_products':added_products , 'stock_increment_idx':stock_increment_idx, 'total_cost':totalx, 'expense':expense}))
+    return HttpResponse(json.dumps({'status':'success','added_products':added_products , 'stock_increment_idx':stock_increment_idx, 'total_cost':totalx}))
 
 
 @csrf_exempt
@@ -425,8 +333,6 @@ def unloadStock(request):
         '''
         cursor.execute(add_product_to_stock_q)
         rowcount = cursor.rowcount
-        update_stock_local(user_id,product_id,quantity*-1)
-        
         if rowcount == 1:
             removed_products.append(item_sold_idx)
     get_all_income_q = f'''
@@ -443,7 +349,6 @@ def unloadStock(request):
     connection.commit()
     return HttpResponse(json.dumps({'status':'success','items_removed':removed_products,'token':token}))
 
-@csrf_exempt
 def getIncrements(request):
     jned = json.loads(request.body)
     product_id = jned['product_id']
@@ -495,7 +400,7 @@ def addCustomer(request):
     rowcount = cursor.rowcount
     return HttpResponse(json.dumps({'status':'success','rowcount':rowcount,'token':token}))
         
-@csrf_exempt        
+        
 def getCustomers(request):
     connection = connect()
     jned = json.loads(request.body)

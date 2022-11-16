@@ -13,10 +13,12 @@ def tokenGen(length=5):
     token = ''.join((random.choice(lettersAndDigits) for i in range(length)))
     return token
 
+
 def connect():
     try:
         connection = psycopg2.connect(user="postgres",
                                     password="postgres",
+                                    host="127.0.0.1",
                                     port="5432",
                                     database="manager2")
     except:
@@ -25,10 +27,12 @@ def connect():
         
         
         
+               
 @csrf_exempt
 def createUser(request):
     print(request.body)
     jned = json.loads(request.body)
+    print(jned)
     email = jned['email']
     password = jned['password']
     name = jned['name']
