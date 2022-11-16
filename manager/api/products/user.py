@@ -13,10 +13,12 @@ def tokenGen(length=5):
     token = ''.join((random.choice(lettersAndDigits) for i in range(length)))
     return token
 
+
 def connect():
     try:
         connection = psycopg2.connect(user="postgres",
-                                    password="0000",
+                                    password="postgres",
+                                    host="127.0.0.1",
                                     port="5432",
                                     database="manager2")
     except:
@@ -38,8 +40,8 @@ def createUser(request):
     connection = connect()
     cursor = connection.cursor()
     create_user_q = f'''
-    insert into auth_user (idx,namex,surname,email,passwordx,phone,expense,income)
-    values('{idx}','{name}','{surname}','{email}','{password}','{phone}',{0},{0})
+    insert into auth_user (idx,namex,surname,email,passwordx,phone)
+    values('{idx}','{name}','{surname}','{email}','{password}','{phone}')
     '''
     cursor.execute(create_user_q)
     rowcount = cursor.rowcount
