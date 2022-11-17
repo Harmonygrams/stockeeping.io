@@ -1,0 +1,7 @@
+export {default as fetchCategories} from './fetchCategories'
+export {default as fetchSuppliers} from './fetchSuppliers'
+export {default as addProducts} from './addProduct'
+export {default as fetchProducts} from './fetchProducts'
+export {default as addCategory} from './addCategory'
+export {default as addSupplier} from './addSupplier'
+export {default as getStockDetails} from './getStockDetails'
