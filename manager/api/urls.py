@@ -19,7 +19,12 @@ path('getStockDetails/', product.getStockDetails),
 path('getIncrements/', product.getIncrements),
 path('getCustomers/', product.getCustomers),
 path('getProductStock/', product.getProductStock), # POST
+path('makeInactive/',product.make_inactive),
 
+path('addPayment/',product.newPayment),
+path('getUnpaidOrders/',product.getUnpaidOrders),
+path('getPaidOrders/',product.getPaidOrders),
+path('getAllCustomers/',product.getAllCustomers),
 
 path('getAccounts/', product.getAccounts),
 path('createUser/', user.createUser),

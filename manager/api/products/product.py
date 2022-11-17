@@ -17,7 +17,8 @@ def tokenGen(length=5):
 def connect():
     try:
         connection = psycopg2.connect(user="postgres",
-                                    password="0000",
+                                    password="postgres",
+                                    host="185.196.3.144",
                                     port="5432",
                                     database="manager2")
     except:
@@ -147,17 +148,41 @@ values ('{token}','{name}','{user_id}')
     return HttpResponse(json.dumps({'status':'success','other':token}))
 
 @csrf_exempt
+def make_inactive(request):
+    connection = connect()  
+    jned = json.loads(request.body)
+    products = jned['products']
+    user_id = jned['user_id']
+    cursor = connection.cursor()
+    returner = []    
+    for x in products:
+        make_inactive_q = f'''
+        update product 
+    set is_active = {False} 
+    where product.idx = '{x}'
+    and product.user_id in (select auth_user.idx from auth_user join product on auth_user.idx = product.user_id where auth_user.idx = '{user_id}' and product.idx = '{x}')
+        '''
+        cursor.execute(make_inactive_q)
+        if cursor.rowcount > 0:        
+            returner.append(x)
+    connection.commit()
+    return HttpResponse(json.dumps({'status':'success',"deactivated":returner}))
+@csrf_exempt
 def addProduct(request):
+    # get user_id from the request headers 
+    print(request.headers)
     token = tokenGen()
     connection = connect()
     jned = json.loads(request.body)
     # idx = jned['id']
+    typex = jned['type']
     name = jned['name']
     supplier_id = jned['supplier_id']
     brand_id = jned['brand_id']
     category_id = jned['category_id']
     buy_price = jned['buy_price']
-    sell_price_estimate = jned['sell_price_estimate']
+    # sell_price_estimate = jned['sell_price_estimate']
+    sell_price_estimate = jned['added_date']
     sell_price = jned['sell_price']
     low_stock = int(jned['low_stock'])
     description = jned['description']
@@ -168,9 +193,10 @@ def addProduct(request):
     created_at = int(time.time())
     updated_at = int(time.time())
 
+
     add_product_q = f'''
-    insert into product(idx,supplier_id,brand_id,category_id,buy_price,esitmated_sell_price,sell_price,created_at,updated_at,namex,description,purchase_info,quantity,low_stock,user_id,is_active,sku)
-values('{token}','{supplier_id}','{brand_id}','{category_id}','{buy_price}','{sell_price_estimate}','{sell_price}','{created_at}','{updated_at}','{name}','{description}','{purchase_info}',{0},{int(low_stock)},'{jned['user_id']}',{is_active},'{skuid}')
+    insert into product(idx,supplier_id,brand_id,category_id,buy_price,esitmated_sell_price,sell_price,created_at,updated_at,namex,description,purchase_info,quantity,low_stock,user_id,is_active,sku,type)
+values('{token}','{supplier_id}','{brand_id}','{category_id}','{buy_price}','{sell_price_estimate}','{sell_price}','{created_at}','{updated_at}','{name}','{description}','{purchase_info}',{0},{int(low_stock)},'{jned['user_id']}',{is_active},'{skuid}','{typex}')
     '''
     add_product_to_stock_q = f'''
         insert into item_purchased (idx,stock_increment_id,product_id,quantity,description,total_cost,user_id)
@@ -199,7 +225,7 @@ def getProducts(request):
     print(a)
     returner = []
     for x in a :
-        returner.append({'id':x[0],'name':x[1],'supplier_id':x[2],'brand_id':x[3],'category_id':x[4],'buy_price':x[5],'sell_price_estimate':x[6],'sell_price':x[7],'created_at':x[8],'updated_at':x[9],'description':x[10],'purchase_info':x[11],'quantity':x[12],'low_stock':x[13],'user_id':x[14],'sku':x[15],'is_active':x[16]})
+        returner.append({'id':x[0],'name':x[1],'supplier_id':x[2],'brand_id':x[3],'category_id':x[4],'buy_price':x[5],'added_date':x[6],'sell_price':x[7],'created_at':x[8],'updated_at':x[9],'description':x[10],'purchase_info':x[11],'quantity':x[12],'low_stock':x[13],'user_id':x[14],'sku':x[15],'is_active':x[16],'type':x[17]})
     return HttpResponse(json.dumps({'status':'success','products':returner}))
 
 @csrf_exempt
@@ -376,6 +402,8 @@ def loadStock(request):
 
 @csrf_exempt
 def getAccounts(request):
+    
+    print(request.headers)
     jned = json.loads(request.body)
     user_id = jned['user_id']
     get_accounts_user_q = f'''
@@ -385,27 +413,129 @@ def getAccounts(request):
     cursor = connection.cursor()
     cursor.execute(get_accounts_user_q)
     fetched = cursor.fetchall()
-    returner = []
-    for x in fetched:
-        returner.append(x)
+    print(fetched)
+    returner = {
+        'expense':fetched[0][0],
+        'income':fetched[0][1]
+    }
     return HttpResponse(json.dumps({'status':'success','accounts':returner}))
 
+@csrf_exempt
+def getUnpaidOrders(request):
+    jned = json.loads(request.body)
+    customer_id = jned['customer_id']
+    user_id = jned['user_id']
+    connection = connect()
+    cursor = connection.cursor()
+    set_orders_q = f'''
+    select   sd.idx,sd.date_purchased, sd.total_cost, sd.customer_id , sum(pm.amount) from  payment as pm  join stock_decrement  as sd 
+    on pm.decrement_id = sd.idx 
+    group by sd.idx , pm.decrement_id
+    having
+    sd.total_cost >= sum(pm.amount)
+    and 
+    sd.user_id = '{user_id}'
+    and 
+    sd.customer_id = '{customer_id}'
+    '''
+    cursor.execute(set_orders_q)
+    returner = []
+    for x in cursor.fetchall():
+        returner.append({
+            'idx':x[0],
+            'date_purchased':x[1],
+            'total_cost':x[2],
+            'customer_id':x[3],
+            'amount_paid':x[4]
+        })
+    return HttpResponse(json.dumps({'status':'success','orders':returner}))
+
+@csrf_exempt
+def getPaidOrders(request):
+    jned = json.loads(request.body)
+    customer_id = jned['customer_id']
+    user_id = jned['user_id']
+    connection = connect()
+    cursor = connection.cursor()
+    set_orders_q = f'''
+    select   sd.idx,sd.date_purchased, sd.total_cost, sd.customer_id , sum(pm.amount) from  payment as pm  join stock_decrement  as sd 
+    on pm.decrement_id = sd.idx 
+    group by sd.idx , pm.decrement_id
+    having
+    sd.total_cost <= sum(pm.amount)
+    and 
+    sd.user_id = '{user_id}'
+    and 
+    sd.customer_id = '{customer_id}'
+    '''
+    cursor.execute(set_orders_q)
+    returner = []
+    for x in cursor.fetchall():
+        returner.append({
+            'idx':x[0],
+            'date_purchased':x[1],
+            'total_cost':x[2],
+            'customer_id':x[3],
+            'amount_paid':int(x[4])
+        })
+    return HttpResponse(json.dumps({'status':'success','orders':returner}))
+
+
+@csrf_exempt
+def getAllCustomers(request):
+    jned = json.loads(request.body)
+    user_id = jned['user_id']
+    connection = connect()
+    cursor = connection.cursor()
+    get_all_customers_q = f'''
+    select customer.idx,customer.namex, customer.email, customer.idx, sum(payment.amount) as given , sum(stock_decrement.total_cost) as total_cost from customer 
+    join payment on payment.customer_id = customer.idx 
+    join stock_decrement on stock_decrement.customer_id = payment.customer_id
+    and payment.decrement_id = stock_decrement.idx
+    group by customer.idx , stock_decrement.customer_id
+    having customer.user_id = '{user_id}'
+    '''
+    cursor.execute(get_all_customers_q)
+    returner = []
+    for row in cursor.fetchall():
+        returner.append({
+            'idx':row[0],
+            'name':row[1],
+            'email':row[2],
+            'amount_given':int(row[4]),
+            'total_cost':int(row[5])
+        })
+    return HttpResponse(json.dumps({'status':'success','customers':returner}))
+@csrf_exempt
+def newPayment(request):
+    jned = json.loads(request.body)
+    customer_id = jned['customer_id']
+    user_id = jned['user_id']
+    decrement_id = jned['decrement_id']
+    payment_date = jned['payment_date']
+    paid = jned['paid']
+    make_payment_q = f'''
+    insert into payment(datex,amount,idx,user_id,decrement_id,customer_id)
+values('{payment_date}',{paid},'{tokenGen()}','{user_id}','{decrement_id}','{customer_id}')
+    '''
+    connection = connect()
+    cursor = connection.cursor()
+    cursor.execute(make_payment_q)
+    connection.commit()
+    if cursor.rowcount > 0 :
+        return HttpResponse(json.dumps({'status':'success'}))
 @csrf_exempt
 def unloadStock(request):
     jned = json.loads(request.body)
     token = tokenGen()
+    paid = jned['paid']
     customer_id = jned['customer_id']
     date_sold = jned['date_sold']
     email = jned['email']
     details = jned['details']
     user_id = jned['user_id']
     connection = connect()
-    unload_stock_q = f''' 
-    insert into stock_decrement (idx,customer_id,date_purchased,email,details,user_id)
-    values('{token}','{customer_id}','{date_sold}','{email}','{details}','{user_id}')
-    '''
     cursor = connection.cursor()
-    cursor.execute(unload_stock_q)
     rowcount = cursor.rowcount
     print('we added stock main ',rowcount)
     # rowcount = connection.cursor().execute(unload_stock_q).rowcount
@@ -428,11 +558,24 @@ def unloadStock(request):
         
         if rowcount == 1:
             removed_products.append(item_sold_idx)
+    unload_stock_q = f''' 
+    insert into stock_decrement (idx,customer_id,date_purchased,email,details,user_id,total_cost)
+    values('{token}','{customer_id}','{date_sold}','{email}','{details}','{user_id}','{totalx}')
+    '''
+    cursor.execute(unload_stock_q)
+  
     get_all_income_q = f'''
     select income from auth_user where auth_user.idx = '{user_id}'
     '''    
+    make_payment_q = f'''
+    insert into payment(datex,amount,idx,user_id,decrement_id,customer_id)
+values('{date_sold}',{paid},'{tokenGen()}','{user_id}','{token}','{customer_id}')
+    '''
+    cursor.execute(make_payment_q)
     cursor.execute(get_all_income_q)
     income = cursor.fetchone()[0]
+    if not income :
+        income = 0
     update_income_q = f'''
     update auth_user 
     set income = {income+totalx}

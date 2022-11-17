@@ -18,13 +18,12 @@ def connect():
     try:
         connection = psycopg2.connect(user="postgres",
                                     password="postgres",
-                                    host="127.0.0.1",
+                                    host="185.196.3.144",
                                     port="5432",
                                     database="manager2")
     except:
         print('error in connection ')
     return connection
-        
         
         
 @csrf_exempt
