@@ -444,9 +444,9 @@ def getUnpaidOrders(request):
         returner.append({
             'idx':x[0],
             'date_purchased':x[1],
-            'total_cost':x[2],
+            'total_cost':int(x[2]),
             'customer_id':x[3],
-            'amount_paid':x[4]
+            'amount_paid':int(x[4])
         })
     return HttpResponse(json.dumps({'status':'success','orders':returner}))
 
@@ -626,16 +626,38 @@ def addCustomer(request):
     postcode = jned['postcode']
     address = jned['address']
     user_id = jned['user_id']
+    
     connection = connect()
     cursor = connection.cursor()
-    add_customer_q = f'''
-    insert into customer (idx,namex,phone,email,country,city,postcode,address,user_id)
-    values ('{token}','{namex}','{phone}','{email}','{country}','{city}','{postcode}','{address}','{user_id}')
-    '''
-    cursor.execute(add_customer_q)
-    connection.commit()
-    rowcount = cursor.rowcount
-    return HttpResponse(json.dumps({'status':'success','rowcount':rowcount,'token':token}))
+    if not jned['debt']:
+        add_customer_q = f'''
+        insert into customer (idx,namex,phone,email,country,city,postcode,address,user_id)
+        values ('{token}','{namex}','{phone}','{email}','{country}','{city}','{postcode}','{address}','{user_id}')
+        '''
+        cursor.execute(add_customer_q)
+        connection.commit()
+        rowcount = cursor.rowcount
+        return HttpResponse(json.dumps({'status':'success','rowcount':rowcount,'token':token}))
+    else:
+        add_customer_q = f'''
+        insert into customer (idx,namex,phone,email,country,city,postcode,address,user_id)
+        values ('{token}','{namex}','{phone}','{email}','{country}','{city}','{postcode}','{address}','{user_id}')
+        '''
+        debt_id = tokenGen()
+        add_debt_q = f'''
+        insert into stock_decrement (idx,customer_id,date_purchased,email,details,user_id,total_cost)
+        values('{debt_id}','{token}','{jned['debt-date']}','{jned['debt-email']}','{jned['debt-details']}','{user_id}',{jned['debt']})
+        '''
+        make_payment_q = f'''
+        insert into payment(datex,amount,idx,user_id,decrement_id,customer_id)
+        values('debt-date',{0},'{tokenGen()}','{user_id}','{debt_id}','{token}')
+        '''
+        cursor.execute(add_customer_q)
+        cursor.execute(add_debt_q)
+        cursor.execute(make_payment_q)
+        connection.commit()
+        rowcount = cursor.rowcount
+        return HttpResponse(json.dumps({'status':'success','rowcount':rowcount,'token':token , 'debt':jned['debt']}))
         
 @csrf_exempt        
 def getCustomers(request):

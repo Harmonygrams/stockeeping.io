@@ -1,0 +1,16 @@
+{
+	invoice_number : 1,
+	invoice_term : [net30, net15,
+    ], 
+	invoice : date, 
+	customer_id : djkfj, 
+	items : [
+        {
+            item_id : 1,
+            item_name : "orange",
+            item_price : 100,
+            item_quantity : 2,
+            item_total : 200
+        }
+    ],
+}
