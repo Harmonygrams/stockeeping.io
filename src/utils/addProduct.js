@@ -1,5 +1,5 @@
 import axios from 'axios'
-const addProducts = async (formData, setAlert,setNewProductInformation) => {
+const addProducts = async (formData, setAlert,setNewProductInformation, setIsAddingProduct) => {
     const newFormData = {
         name : formData.productName, 
         supplier_id : formData.productSupplierId,
@@ -20,7 +20,6 @@ const addProducts = async (formData, setAlert,setNewProductInformation) => {
         income_account : formData.productIncomeAccount, 
     }
     const raw = JSON.stringify(newFormData)
-    console.log(newFormData)
     axios({
         method : "POST", 
         data : raw,
@@ -32,8 +31,7 @@ const addProducts = async (formData, setAlert,setNewProductInformation) => {
         }
         return status
     }).
-    then(status => {
-        return setNewProductInformation({
+    then(setNewProductInformation({
             productType : 'inventory',
             productName : "", 
             productDescription : "", 
@@ -49,7 +47,8 @@ const addProducts = async (formData, setAlert,setNewProductInformation) => {
             productExpenseAccount : 'Cost Of Products', 
             productIncomeAccount : 'Sales Of Products'
         })
-    }).
+    ).
+    then(setIsAddingProduct(false)).
     catch(err => {console.log(err)})
 }
 export default addProducts

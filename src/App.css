@@ -4,8 +4,29 @@
 .addproducts-container{
     background-color: rgba(128, 128, 128, .5);   
 }
+.transparent-bg {
+    background-color: rgba(128, 128, 128, .5);   
+}
 .product__input::-webkit-inner-spin-button, 
 .product__input::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0; 
+}
+
+.resizer {
+    display: inline-block;
+    width: 20px;
+    height: 100%;
+    position: absolute;
+    right: 0; 
+    top: 0; 
+    transform: translateX(50%);
+    z-index: 1;
+    touch-action: none;
+}
+.MuiFormControl-root.MuiTextField-root.css-1u3bzj6-MuiFormControl-root-MuiTextField-root{
+    height: 45px;
+}
+.MuiInputBase-root {
+    height: inherit; 
 }

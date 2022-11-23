@@ -1,5 +1,5 @@
 import './App.css';
-import {Sidebar, Products, Navbar} from './components/index'
+import {Sidebar, Products, Navbar, Customers} from './components/index'
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
 import { useSelector} from 'react-redux'
 function App() {
@@ -12,6 +12,7 @@ function App() {
         <Router> 
           <Routes> 
             <Route path="/user/products" element={<Products />}/>
+            <Route path="/user/customers" element={<Customers />} />
           </Routes>
         </Router>
       </div>

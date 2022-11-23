@@ -12,7 +12,6 @@ const Sidebar = () => {
             dispatch(sidebarActions.closeSidebar())
         }
     }
-
     //On medium screen sizes and above, sidebar would be permanent 
     useEffect(() => {
         const closeSidebarOnSmallerWindow = () => {
@@ -24,7 +23,7 @@ const Sidebar = () => {
         return () => window.removeEventListener('resize', closeSidebarOnSmallerWindow)
     }, [])
     return(
-        <div className='w-full h-screen absolute left-0 top-0 sidebar-container md:w-60 md:relative ' onClick={closeSidebar}> 
+        <aside className='w-full h-screen absolute left-0 top-0 sidebar-container md:w-60 md:relative ' onClick={closeSidebar}> 
             <div className='bg-indigo-500 h-full w-80 md:w-full'>
                 <div className='py-4 pl-4'> 
                     <a className="italic text-xl text-gray-300 font-medium" href="#">storekeeper &trade;</a>
@@ -51,7 +50,7 @@ const Sidebar = () => {
                     </a>                
                     <a 
                         style={{backgroundColor : currentPage === 'customers' && "#312e81", color : "#fff"}} 
-                        href="/user/customers" 
+                        href="/user/customers"
                         className='flex items-center gap-2 pl-4 py-2 hover:bg-indigo-800 transition'
                     > 
                         <FiUsers />
@@ -66,8 +65,8 @@ const Sidebar = () => {
                         <span> Sales </span> 
                     </a>
                     <a 
-                        style={{backgroundColor : currentPage === 'customers' && "#312e81", color : "#fff"}} 
-                        href="/user/customers" 
+                        style={{backgroundColor : currentPage === 'reports' && "#312e81", color : "#fff"}} 
+                        href="/user/reports" 
                         className='flex items-center gap-2 pl-4 py-2 hover:bg-indigo-800 transition'
                     > 
                         <FiUsers />
@@ -75,7 +74,7 @@ const Sidebar = () => {
                     </a>
                 </div>
             </div>
-        </div>
+        </aside>
     )
 }
 export default Sidebar     

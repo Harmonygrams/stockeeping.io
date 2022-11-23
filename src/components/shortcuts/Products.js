@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef} from 'react'
 import {actions as sidebarActions } from '../../store/sidebarSlice/sidebarSlice'
 import {FiBox} from 'react-icons/fi'
-import ProductTable from '../addOnComponents/ProductTable'
+import ProductTable from '../tables/ProductTable'
 import {IoPricetagOutline} from 'react-icons/io5'
 import { SlSocialDropbox} from 'react-icons/sl'
 import { useDispatch } from 'react-redux'
@@ -17,7 +17,8 @@ const Products = () => {
     const dispatch = useDispatch()
     useEffect(() => {
         dispatch(sidebarActions.setCurrentPage({currentPage : 'products'}))
-    })
+        document.title = "Products"
+    },[])
     useEffect(() => {
         const closeAddProductWindow = (e) => {
             if(e.key === "Escape"){

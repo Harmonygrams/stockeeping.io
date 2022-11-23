@@ -6,7 +6,9 @@ import Slide from '@mui/material/Slide';
 import "react-date-range/dist/theme/default.css";
 import { Alert } from '@mui/material';
 import {addCategory, addProducts, addSupplier, fetchCategories, fetchSuppliers } from '../../utils/index';
+import { ScaleLoader } from 'react-spinners';
 const AddProducts = ({closeAddProductWindow}) => {
+    const [isAddingProduct, setIsAddingProduct] = useState(false) //This is run when the product is not yet added
     const [alert, setAlert] = useState(false)
     const [productDropdownOptions, setProductDropdownOptions] = useState({
         categories : [{value : "", label : ""}], 
@@ -56,13 +58,14 @@ const AddProducts = ({closeAddProductWindow}) => {
         }, 2000)
         return () => clearInterval(interval)
     }, [alert])
+
     return(
         <div className='h-screen w-full absolute top-0 left-0 flex justify-end addproducts-container scroll-smooth'>
             <div className='h-full w-full relative sm:w-2/3 md:w-3/5 xl:w-2/5 2xl:w-2/7 bg-white overflow-y-scroll bg-white'>
                 {alert && <div className='fixed w-full flex justify-center md:justify-start'>
                     <Slide 
                         direction = {"down"}
-                        in = {'checked'}
+                        in = {alert}
                     > 
                         <Alert variant={"filled"} severity={'success'}>Product Added Successfully</Alert>
                     </Slide>
@@ -76,7 +79,8 @@ const AddProducts = ({closeAddProductWindow}) => {
                         className='px-4 mb-20 border-2' 
                         onSubmit={(e) => {
                             e.preventDefault()
-                            addProducts(newProductInformation, setAlert, setNewProductInformation)
+                            setIsAddingProduct(true)
+                            addProducts(newProductInformation, setAlert, setNewProductInformation, setIsAddingProduct)
                         }
                         }
                     >
@@ -224,7 +228,13 @@ const AddProducts = ({closeAddProductWindow}) => {
                         </fieldset>
                         <div className='py-4 bg-gray-100 bottom-0 right-0 fixed w-full flex justify-center md:justify-end px-4 sm:w-2/3 md:w-3/5 xl:w-2/5 2xl:w-1/5'> 
                             <button className='ml-2 px-10 py-1 border-2 border-indigo-500 text-gray-800 text-sm rounded-full sm:px-12 transition' onClick={closeAddProductWindow}>Cancel</button>
-                            <button className='bg-indigo-500 ml-2 px-10 py-1 border-2 border-indigo-500 text-white text-sm rounded-full sm:px-12 hover:bg-indigo-800 transition hover:text-indigo-300' type="submit">Save</button>
+                            <button 
+                                style={{cursor : isAddingProduct ? 'wait' : 'pointer'}}
+                                className='bg-indigo-500 ml-2 px-10 py-1 border-2 border-indigo-500 text-white text-sm rounded-full sm:px-12 hover:bg-indigo-800 transition hover:text-indigo-300 flex items-center' 
+                                type="submit"
+                            >
+                                {isAddingProduct ? <ScaleLoader height={10} width={2} color = "#fff"/> : 'Save'}
+                            </button>
                         </div>
                     </form>
                 </div> 
